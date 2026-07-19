@@ -28,4 +28,6 @@ body {
 .post-header{
     text-color:white;
     font-size: 20px;
+    text-align: left;
+    font-family:TimesNewRoman;
 }
