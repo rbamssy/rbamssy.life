@@ -25,3 +25,7 @@ body {
     border: solid 1px white;
     flex-direction: column;
 }
+.post-header{
+    text-color:#87ceeb;
+    font-size: 20px;
+}
