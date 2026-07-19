@@ -13,16 +13,17 @@ body {
     justify-content:center;
     align-items: center;
     flex-direction: column;
-    
+    background-color: black;
+    border: solid 1px white;
+    text-align: left;   
+    width:50%;
 
 }
 .post-content {
-    display: block;          /* Changed from flex to block for standard top-to-bottom text layout */
-    margin: 0 auto;          /* Centers the container horizontally since it's a block element */
-    width: 50%;
-    background-color: black;
-    border: solid 1px white;
-    text-align: left;        /* Optional: Makes the text easier to read than full center-alignment */
+    display: block;       
+    margin: 0 auto;       
+    width: 40%;
+
 }
 .post-header{
     text-color:white;
