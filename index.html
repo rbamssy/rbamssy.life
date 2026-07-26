@@ -1,10 +1,309 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>rbamssy</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>rbamssy</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
   <div class="text">I'm sorry</div>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    /* --- 1. Text Jitter Script --- */
+    const textEl = document.querySelector('.text');
+
+    function jitterText() {
+      const isBigSpike = Math.random() < 0.14;
+      const range = isBigSpike ? 1.8 : 0.7;
+
+      const x = (Math.random() * (range * 2) - range).toFixed(2);
+      const y = (Math.random() * (range * 2) - range).toFixed(2);
+
+      textEl.style.transform = `translate(${x}px, ${y}px)`;
+
+      const nextInterval = Math.random() * 16 + 4;
+      setTimeout(jitterText, nextInterval);
+    }
+    jitterText();
+
+    /* --- 2. Interactive Canvas Slice & Seamless Fluid Ooze --- */
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Static canvas buffer for finished trails
+    const staticCanvas = document.createElement('canvas');
+    const staticCtx = staticCanvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      staticCanvas.width = window.innerWidth;
+      staticCanvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const oozes = [];
+
+    window.addEventListener('click', (e) => {
+      const clickX = e.clientX;
+      const clickY = e.clientY;
+
+      const angle = (Math.random() * 60 - 30) * (Math.PI / 180);
+      const length = Math.random() * 80 + 100;
+
+      const x1 = clickX - Math.cos(angle) * (length / 2);
+      const y1 = clickY - Math.sin(angle) * (length / 2);
+      const x2 = clickX + Math.cos(angle) * (length / 2);
+      const y2 = clickY + Math.sin(angle) * (length / 2);
+
+      // Bake slice line immediately
+      drawTaperedLine(staticCtx, x1, y1, x2, y2, 5.0);
+
+      const trailCount = Math.floor(Math.random() * 3) + 5;
+      const step = 1 / (trailCount + 1);
+
+      for (let i = 1; i <= trailCount; i++) {
+        const t = (i * step) + (Math.random() * (step * 0.3) - step * 0.15);
+        const baseWidth = Math.random() * 7 + 9;
+
+        const px = x1 + (x2 - x1) * t;
+        const py = y1 + (y2 - y1) * t;
+        const startY = py - 6;
+
+        oozes.push({
+          history: [{ x: px, y: startY, width: baseWidth }],
+          x: px,
+          y: startY,
+          vx: 0,
+          vy: Math.random() * 0.3 + 0.4,
+          baseVy: Math.random() * 0.3 + 0.4,
+          baseWidth: baseWidth,
+          currentWidth: baseWidth,
+          sliceAngle: angle,
+          sliceX1: x1,
+          sliceY1: y1,
+          sliceX2: x2,
+          sliceY2: y2,
+          gravity: 0.012 + Math.random() * 0.005,
+          
+          jaggedTimer: 0,
+          jagOffsetDir: 0,
+
+          thicknessState: 1.0,
+          thicknessTimer: 0,
+
+          speedMultiplier: 1.0,
+          speedStateTimer: 0,
+
+          totalDistance: 0,
+          maxTrailLength: Math.random() * 500 + 700,
+          isSlowing: false
+        });
+      }
+    });
+
+    function drawTaperedLine(targetCtx, x1, y1, x2, y2, maxWidth) {
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      const steps = 30;
+
+      targetCtx.save();
+      targetCtx.fillStyle = '#ffffff';
+      targetCtx.beginPath();
+
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const currX = x1 + (x2 - x1) * t;
+        const currY = y1 + (y2 - y1) * t;
+        const w = Math.sin(t * Math.PI) * (maxWidth / 2);
+
+        const nx = -Math.sin(angle) * w;
+        const ny = Math.cos(angle) * w;
+
+        if (i === 0) targetCtx.moveTo(currX + nx, currY + ny);
+        else targetCtx.lineTo(currX + nx, currY + ny);
+      }
+
+      for (let i = steps; i >= 0; i--) {
+        const t = i / steps;
+        const currX = x1 + (x2 - x1) * t;
+        const currY = y1 + (y2 - y1) * t;
+        const w = Math.sin(t * Math.PI) * (maxWidth / 2);
+
+        const nx = Math.sin(angle) * w;
+        const ny = -Math.cos(angle) * w;
+
+        targetCtx.lineTo(currX + nx, currY + ny);
+      }
+
+      targetCtx.closePath();
+      targetCtx.fill();
+      targetCtx.restore();
+    }
+
+    function renderDripToContext(targetCtx, o) {
+      const h = o.history;
+      if (h.length <= 1) return;
+
+      targetCtx.save();
+
+      const cosA = Math.cos(o.sliceAngle);
+      const sinA = Math.sin(o.sliceAngle);
+
+      const farX1 = o.sliceX1 - cosA * 2000;
+      const farY1 = o.sliceY1 - sinA * 2000;
+      const farX2 = o.sliceX2 + cosA * 2000;
+      const farY2 = o.sliceY2 + sinA * 2000;
+
+      targetCtx.beginPath();
+      targetCtx.moveTo(farX1, farY1);
+      targetCtx.lineTo(farX2, farY2);
+      targetCtx.lineTo(canvas.width + 2000, canvas.height + 2000);
+      targetCtx.lineTo(-2000, canvas.height + 2000);
+      targetCtx.closePath();
+      targetCtx.clip();
+
+      targetCtx.fillStyle = '#ffffff';
+
+      const leftSide = [];
+      const rightSide = [];
+
+      for (let j = 0; j < h.length; j++) {
+        const prev = h[j - 1] || h[j];
+        const curr = h[j];
+        const next = h[j + 1] || curr;
+
+        const dx = next.x - prev.x;
+        const dy = next.y - prev.y;
+        const len = Math.hypot(dx, dy) || 1;
+        const nx = -dy / len;
+        const ny = dx / len;
+
+        const halfW = curr.width / 2;
+        leftSide.push({ x: curr.x - nx * halfW, y: curr.y - ny * halfW });
+        rightSide.push({ x: curr.x + nx * halfW, y: curr.y + ny * halfW });
+      }
+
+      targetCtx.beginPath();
+      targetCtx.moveTo(leftSide[0].x, leftSide[0].y);
+      targetCtx.lineTo(rightSide[0].x, rightSide[0].y);
+
+      for (let j = 1; j < rightSide.length; j++) {
+        targetCtx.lineTo(rightSide[j].x, rightSide[j].y);
+      }
+
+      const tip = h[h.length - 1];
+      const lastRight = rightSide[rightSide.length - 1];
+      const lastLeft = leftSide[leftSide.length - 1];
+      targetCtx.bezierCurveTo(
+        lastRight.x, lastRight.y + tip.width * 0.6,
+        lastLeft.x, lastLeft.y + tip.width * 0.6,
+        lastLeft.x, lastLeft.y
+      );
+
+      for (let j = leftSide.length - 2; j >= 0; j--) {
+        targetCtx.lineTo(leftSide[j].x, leftSide[j].y);
+      }
+
+      targetCtx.closePath();
+      targetCtx.fill();
+      targetCtx.restore();
+    }
+
+    let lastTime = performance.now();
+
+    function animateCanvas(now) {
+      const dt = Math.min((now - lastTime) / 16.67, 2.0);
+      lastTime = now;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw all finished/baked paths
+      ctx.drawImage(staticCanvas, 0, 0);
+
+      // Process live drips
+      for (let i = oozes.length - 1; i >= 0; i--) {
+        const o = oozes[i];
+
+        if (o.isSlowing) {
+          o.vy *= Math.pow(0.88, dt);
+          o.vx *= Math.pow(0.88, dt);
+
+          if (o.vy < 0.015) {
+            // Push final frozen coordinate directly before baking to prevent 1-frame offset
+            o.history.push({ x: o.x, y: o.y, width: o.currentWidth });
+            renderDripToContext(staticCtx, o);
+            oozes.splice(i, 1);
+            continue;
+          }
+        } else {
+          if (o.thicknessTimer > 0) {
+            o.thicknessTimer -= dt;
+          } else {
+            const tiers = [0.93, 1.0, 1.07];
+            o.thicknessState = tiers[Math.floor(Math.random() * 3)];
+            o.thicknessTimer = Math.floor(Math.random() * 25) + 12;
+          }
+
+          const targetWidth = o.baseWidth * o.thicknessState;
+          o.currentWidth += (targetWidth - o.currentWidth) * 0.12 * dt;
+
+          if (o.speedStateTimer > 0) {
+            o.speedStateTimer -= dt;
+          } else {
+            const roll = Math.random();
+            if (roll < 0.03) {
+              o.speedMultiplier = Math.random() * 0.10 + 1.10;
+              o.speedStateTimer = Math.floor(Math.random() * 60) + 40;
+            } else if (roll < 0.06) {
+              o.speedMultiplier = Math.random() * 0.08 + 0.88;
+              o.speedStateTimer = Math.floor(Math.random() * 70) + 50;
+            } else {
+              o.speedMultiplier = 1.0;
+              o.speedStateTimer = Math.floor(Math.random() * 80) + 40;
+            }
+          }
+
+          const targetVy = (o.baseVy + o.gravity) * o.speedMultiplier;
+          o.vy += (targetVy - o.vy) * 0.03 * dt;
+
+          if (o.jaggedTimer > 0) {
+            o.jaggedTimer -= dt;
+          } else {
+            o.jagOffsetDir = (Math.random() - 0.5) * 0.28;
+            o.jaggedTimer = Math.floor(Math.random() * 16) + 8;
+          }
+
+          const speed = Math.hypot(o.vx, o.vy) || 1;
+          const perpX = -o.vy / speed;
+          
+          o.vx += perpX * o.jagOffsetDir * 0.15 * dt;
+          o.vx *= Math.pow(0.85, dt);
+        }
+
+        o.x += o.vx * dt;
+        o.y += o.vy * dt;
+
+        const stepDist = Math.hypot(o.vx, o.vy) * dt;
+        o.totalDistance += stepDist;
+
+        o.history.push({ x: o.x, y: o.y, width: o.currentWidth });
+
+        if (o.totalDistance >= o.maxTrailLength || o.y > canvas.height + 200) {
+          o.isSlowing = true;
+        }
+
+        renderDripToContext(ctx, o);
+      }
+
+      requestAnimationFrame(animateCanvas);
+    }
+
+    requestAnimationFrame(animateCanvas);
+  </script>
+
 </body>
 </html>
