@@ -7,13 +7,13 @@ justify-content: center;
 align-items: center;
 }
 
-.text {
+.centered {
 color: white;
 font-size: 4rem;
 font-family: "Cinzel", serif;
 letter-spacing: 0.15em;
 opacity: 0;
-animation: fadein 4s ease-out forwards, shake 0.08s infinite;
+animation: fadein 4s ease-out 3s forwards, shake 0.05s infinite;
 }
 
 @keyframes fadein {
@@ -23,6 +23,9 @@ to { opacity: 1; }
 
 @keyframes shake {
 0% { transform: translate(0, 0); }
-50% { transform: translate(1px, -1px); }
+20% { transform: translate(1px, -1px); }
+40% { transform: translate(-1px, 1px); }
+60% { transform: translate(1px, 1px); }
+80% { transform: translate(-1px, -1px); }
 100% { transform: translate(0, 0); }
 }
