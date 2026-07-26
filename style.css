@@ -5,6 +5,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
+  user-select: none;
 }
 
 .text {
@@ -13,22 +15,22 @@ body {
   font-family: "Cinzel", serif;
   letter-spacing: 0.15em;
   opacity: 0;
-  /* Increased duration slightly so keyframes render reliably */
-  animation: fadein 4s ease-out 3s forwards, shake 0.12s infinite linear;
+  animation: fadein 4s ease-out 3s forwards;
+  will-change: transform;
+  pointer-events: none;
+}
+
+#canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: auto;
+  cursor: crosshair;
 }
 
 @keyframes fadein {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-@keyframes shake {
-  0%   { transform: translate(0px, 0px) rotate(0deg); }
-  10%  { transform: translate(-2px, 1px) rotate(-0.5deg); }
-  25%  { transform: translate(3px, -1px) rotate(0.5deg); }
-  40%  { transform: translate(-1px, -3px) rotate(-1deg); }
-  55%  { transform: translate(2px, 2px) rotate(0.5deg); }
-  70%  { transform: translate(-3px, 1px) rotate(-0.5deg); }
-  85%  { transform: translate(3px, 2px) rotate(1deg); }
-  100% { transform: translate(0px, 0px) rotate(0deg); }
 }
