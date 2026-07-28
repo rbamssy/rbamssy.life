@@ -12,22 +12,13 @@ body {
 .text {
   color: white;
   font-size: 4rem;
-  font-family: "Cinzel", serif;
+  font-family: "Reenie Beanie", cursive;
+  font-weight: 400;
+  font-style: normal;
   letter-spacing: 0.15em;
   opacity: 0;
   animation: fadein 4s ease-out 3s forwards;
   will-change: transform;
-  pointer-events: none;
-}
-
-#canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: auto;
-  cursor: crosshair;
 }
 
 @keyframes fadein {
