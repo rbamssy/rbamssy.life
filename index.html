@@ -19,23 +19,5 @@
     And to L, I love you. I know things have been rough lately and I'm sorry that I haven't been there for you as much as I should have. Thank you for all you've done to try and help me. Even if it doesn't seem like it you really do make an impact. Thank you.
   </div>
 
-  <script>
-    const textEl = document.querySelector('.text');
-
-    function jitterText() {
-      const isBigSpike = Math.random() < 0.14;
-      const range = isBigSpike ? 1.8 : 0.7;
-
-      const x = (Math.random() * (range * 2) - range).toFixed(2);
-      const y = (Math.random() * (range * 2) - range).toFixed(2);
-
-      textEl.style.transform = `translate(${x}px, ${y}px)`;
-
-      const nextInterval = Math.random() * 16 + 4;
-      setTimeout(jitterText, nextInterval);
-    }
-    jitterText();
-  </script>
-
 </body>
 </html>
